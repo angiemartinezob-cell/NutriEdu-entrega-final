@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: nutriedu_recetas
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d nutriedu_recetas"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 3000
+      PERSISTENCE: postgres
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/nutriedu_recetas
+      JWT_SECRET: clave-de-demostracion-docker-de-mas-de-32-caracteres
+      CORS_ORIGINS: http://localhost:5173
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:
